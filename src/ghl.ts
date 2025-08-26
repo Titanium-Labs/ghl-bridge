@@ -111,7 +111,12 @@ export class GHL {
       async (error) => {
         const originalRequest = error.config;
 
-        if (error.response.status === 401 && !originalRequest._retry) {
+        // Check if error.response exists before accessing its properties
+        if (
+          error.response &&
+          error.response.status === 401 &&
+          !originalRequest._retry
+        ) {
           originalRequest._retry = true;
           return this.refreshAccessToken(resourceId).then(async () => {
             const newToken = await this.model.getAccessToken(resourceId);

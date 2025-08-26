@@ -41,6 +41,7 @@ Before you get started, make sure you have the following prerequisites:
    ```
         GHL_APP_CLIENT_ID=<CLIENT_ID> #Change it to you apps client id
         GHL_APP_CLIENT_SECRET=<CLIENT_SECRET> #Change it to your apps secret
+        ZENEXA_BACKEND_URL=<YOUR_ZENEXA_BACKEND_URL> #URL of your Zenexa backend for webhook forwarding
    ```
 
 4. Start the dev Express server:
@@ -97,12 +98,47 @@ Replace `your-company-id` and `your-location-id` with the respective company and
 - `/example-api-call`: Makes an example API call to GoHighLevel for a company.
 - `/example-api-call-location`: Makes an example API call to GoHighLevel for a specific location within a company.
 - `/`: Serves the main HTML file and static assets of your web application.
-- `Webhook Handling`: A route (/example-webhook-handler) has been added to handle incoming POST requests, likely for handling webhooks. It logs the body of the incoming request. You can add it tou your webhook URL section under your app to start receiving requests.
+- `Webhook Handling`: A route (/example-webhook-handler) has been added to handle incoming POST requests for contact webhooks. It processes ContactCreate, ContactUpdate, and ContactDelete events from GHL and forwards them to your Zenexa backend at `ZENEXA_BACKEND_URL/api/webhook/ghl`. You can add this URL to your webhook URL section under your app to start receiving requests.
 - `/decrypt-sso`: A route (/decrypt-sso) has been added to decrypt sso request response received from parent app (Please refer UI app for more details).
 
 ## SSO
 
 Single Sign-On (SSO) is a centralized authentication method that streamlines access to various applications or services with a single set of login credentials. In the context of GoHighLevel, their SSO functionality currently supports integration exclusively with custom pages. When you implement SSO with custom pages through your application's UI, accessible via an iframe, you have the capability to request encrypted SSO details. These encrypted details can be decrypted using the SSOKey provided by GoHighLevel's marketplace, and an example API for this purpose has been included in the repository for straightforward integration.
+
+## Webhook Handling
+
+This application includes comprehensive webhook handling for GHL contact events. When configured, the application will:
+
+1. **Receive webhooks** from GHL for contact events (ContactCreate, ContactUpdate, ContactDelete)
+2. **Fetch complete contact data** from GHL API for create and update events
+3. **Forward webhook data** to your Zenexa backend at `ZENEXA_BACKEND_URL/api/webhook/ghl`
+
+### Webhook Configuration
+
+To enable webhook forwarding to your Zenexa backend:
+
+1. Set the `ZENEXA_BACKEND_URL` environment variable to your backend URL
+2. Add the webhook URL to your GHL app configuration: `https://your-app-domain.com/example-webhook-handler`
+
+### Webhook Data Format
+
+The application sends the following data structure to your Zenexa backend:
+
+```json
+{
+  "type": "ContactCreate|ContactUpdate|ContactDelete",
+  "data": {
+    // For ContactCreate and ContactUpdate: Complete GHL contact data
+    // For ContactDelete: Basic contact info (id, locationId, firstName, lastName, email)
+  }
+}
+```
+
+### Error Handling
+
+- The application includes retry logic for failed API calls
+- Webhook processing continues even if Zenexa backend calls fail
+- All errors are logged for debugging purposes
 
 ## Vue 3 Web Application
 
@@ -168,6 +204,7 @@ Follow these steps to deploy your GoHighLevel Marketplace App Server on Render:
      - `GHL_APP_CLIENT_SECRET`: Your GoHighLevel app's client secret.
      - `GHL_API_DOMAIN`: https://services.leadconnectorhq.com
      - `GHL_APP_SSO_KEY`: Your app's active SSO Key.
+     - `ZENEXA_BACKEND_URL`: Your Zenexa backend URL for webhook forwarding.
 
 6. **Deploy Your App**:
 
@@ -183,10 +220,9 @@ Follow these steps to deploy your GoHighLevel Marketplace App Server on Render:
 
 9. **Troubleshooting**:
 
-    Refer to Render's docs or contact support for help.
+   Refer to Render's docs or contact support for help.
 
 Your GoHighLevel Marketplace App Server is now live on Render.
-
 
 ## License
 

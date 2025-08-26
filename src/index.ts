@@ -53,12 +53,20 @@ app.get("/authorize-handler", async (req: Request, res: Response) => {
 
 /*`app.get("/example-api-call", async (req: Request, res: Response) => { ... })` shows you how you can use ghl object to make get requests
  ghl object in abstract would handle all of the authorization part over here. */
-app.get("/example-api-call", async (req: Request, res: Response) => {
+app.get("/get-contacts", async (req: Request, res: Response) => {
+  console.log("req.query", req.query);
   if (await ghl.checkInstallationExists(req.query.companyId as string)) {
     try {
       const axiosInstance = await ghl.requests(req.query.companyId as string);
-      const request = await axiosInstance.get(
-        `/users/search?companyId=${req.query.companyId}`,
+      const request = await axiosInstance.post(
+        `/contacts/search`,
+        {
+          filters: [],
+          locationId: req.query.locationId as string,
+          query: "",
+          page: 1,
+          pageLimit: 10,
+        },
         {
           headers: {
             Version: "2021-07-28",

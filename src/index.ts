@@ -5,10 +5,31 @@ import dotenv from "dotenv";
 import { GHL } from "./ghl";
 import * as CryptoJS from "crypto-js";
 import { json } from "body-parser";
+import mongoose, { ConnectOptions } from "mongoose";
 
 const path = __dirname + "/ui/dist/";
 
 dotenv.config();
+
+// MongoDB connection function
+function getMongoDBConnection(): string {
+  return process.env.MONGODB_URI || "mongodb://localhost:27017/ghl-bridge";
+}
+
+// MongoDB connection setup
+const connectToMongoDB = async () => {
+  const options: ConnectOptions & {
+    useNewUrlParser: boolean;
+    useUnifiedTopology: boolean;
+  } = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  };
+
+  await mongoose.connect(getMongoDBConnection(), options);
+  console.log("MongoDB connected successful");
+};
+
 const app: Express = express();
 app.use(json({ type: "application/json" }));
 
@@ -128,6 +149,16 @@ app.get("/", function (req, res) {
 /*`app.listen(port, () => {
   console.log(`GHL app listening on port `);
 });` is starting the Express server and making it listen on the specified port. */
-app.listen(port, () => {
-  console.log(`GHL app listening on port ${port}`);
-});
+const startServer = async () => {
+  try {
+    await connectToMongoDB();
+    app.listen(port, () => {
+      console.log(`GHL app listening on port ${port}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();

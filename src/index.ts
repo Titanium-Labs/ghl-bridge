@@ -54,15 +54,17 @@ app.get("/authorize-handler", async (req: Request, res: Response) => {
 /*`app.get("/example-api-call", async (req: Request, res: Response) => { ... })` shows you how you can use ghl object to make get requests
  ghl object in abstract would handle all of the authorization part over here. */
 app.get("/example-api-call", async (req: Request, res: Response) => {
-  if (ghl.checkInstallationExists(req.query.companyId as string)) {
+  if (await ghl.checkInstallationExists(req.query.companyId as string)) {
     try {
-      const request = await ghl
-        .requests(req.query.companyId as string)
-        .get(`/users/search?companyId=${req.query.companyId}`, {
+      const axiosInstance = await ghl.requests(req.query.companyId as string);
+      const request = await axiosInstance.get(
+        `/users/search?companyId=${req.query.companyId}`,
+        {
           headers: {
             Version: "2021-07-28",
           },
-        });
+        }
+      );
       return res.send(request.data);
     } catch (error) {
       console.log(error);
@@ -80,14 +82,16 @@ app.get("/example-api-call-location", async (req: Request, res: Response) => {
     there is an existing installation for the provided locationId and returns a boolean value
     indicating whether the installation exists or not. */
   try {
-    if (ghl.checkInstallationExists(req.params.locationId)) {
-      const request = await ghl
-        .requests(req.query.locationId as string)
-        .get(`/contacts/?locationId=${req.query.locationId}`, {
+    if (await ghl.checkInstallationExists(req.params.locationId)) {
+      const axiosInstance = await ghl.requests(req.query.locationId as string);
+      const request = await axiosInstance.get(
+        `/contacts/?locationId=${req.query.locationId}`,
+        {
           headers: {
             Version: "2021-07-28",
           },
-        });
+        }
+      );
       return res.send(request.data);
     } else {
       /* NOTE: This flow would only work if you have a distribution type of both Location & Company & OAuth read-write scopes are configured. 
@@ -98,13 +102,15 @@ app.get("/example-api-call-location", async (req: Request, res: Response) => {
         req.query.companyId as string,
         req.query.locationId as string
       );
-      const request = await ghl
-        .requests(req.query.locationId as string)
-        .get(`/contacts/?locationId=${req.query.locationId}`, {
+      const axiosInstance = await ghl.requests(req.query.locationId as string);
+      const request = await axiosInstance.get(
+        `/contacts/?locationId=${req.query.locationId}`,
+        {
           headers: {
             Version: "2021-07-28",
           },
-        });
+        }
+      );
       return res.send(request.data);
     }
   } catch (error) {

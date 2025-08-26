@@ -55,9 +55,11 @@ app.get("/authorize-handler", async (req: Request, res: Response) => {
  ghl object in abstract would handle all of the authorization part over here. */
 app.get("/get-contacts", async (req: Request, res: Response) => {
   console.log("req.query", req.query);
-  if (await ghl.checkInstallationExists(req.query.companyId as string)) {
-    try {
-      const axiosInstance = await ghl.requests(req.query.companyId as string);
+  try {
+    // Check if location token exists
+    if (await ghl.checkInstallationExists(req.query.locationId as string)) {
+      // Use location token directly
+      const axiosInstance = await ghl.requests(req.query.locationId as string);
       const request = await axiosInstance.post(
         `/contacts/search`,
         {
@@ -74,11 +76,34 @@ app.get("/get-contacts", async (req: Request, res: Response) => {
         }
       );
       return res.send(request.data);
-    } catch (error) {
-      console.log(error);
+    } else {
+      // Get location token from company token
+      await ghl.getLocationTokenFromCompanyToken(
+        req.query.companyId as string,
+        req.query.locationId as string
+      );
+      const axiosInstance = await ghl.requests(req.query.locationId as string);
+      const request = await axiosInstance.post(
+        `/contacts/search`,
+        {
+          filters: [],
+          locationId: req.query.locationId as string,
+          query: "",
+          page: 1,
+          pageLimit: 10,
+        },
+        {
+          headers: {
+            Version: "2021-07-28",
+          },
+        }
+      );
+      return res.send(request.data);
     }
+  } catch (error) {
+    console.log(error);
+    return res.status(400).send("Error fetching contacts");
   }
-  return res.send("Installation for this company does not exists");
 });
 
 /*`app.get("/example-api-call-location", async (req: Request, res: Response) => { ... })` shows you how you can use ghl object to make get requests

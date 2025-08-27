@@ -106,7 +106,7 @@ export class GHL {
       }
     );
 
-    axios.interceptors.response.use(
+    axiosInstance.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
@@ -121,7 +121,7 @@ export class GHL {
           return this.refreshAccessToken(resourceId).then(async () => {
             const newToken = await this.model.getAccessToken(resourceId);
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
-            return axios(originalRequest);
+            return axiosInstance(originalRequest);
           });
         }
 

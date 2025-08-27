@@ -146,6 +146,12 @@ const callZenexaBackend = async (
         },
       }
     );
+    console.log(
+      "Response from Zenexa API call for ",
+      webhookType,
+      ":",
+      response
+    );
 
     logSuccess(`Zenexa API call for ${webhookType}`, {
       status: response.status,

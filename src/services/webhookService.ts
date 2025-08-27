@@ -233,13 +233,16 @@ export const handleContactDelete: WebhookHandler = async (
   );
 
   try {
-    // For deletion, we send the contact ID and basic data
+    // For deletion, we send the contact ID and basic data wrapped in a contact object
+    // to match the Zenexa backend expectation: data.contact
     const deleteData = {
-      id: data.id,
-      locationId: data.locationId,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
+      contact: {
+        id: data.id,
+        locationId: data.locationId,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+      },
     };
 
     // Call Zenexa backend with retry logic

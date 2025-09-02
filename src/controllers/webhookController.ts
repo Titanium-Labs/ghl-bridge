@@ -61,15 +61,31 @@ export const webhookController = {
         return;
       }
 
-      // Process the webhook
-      await processZenexaWebhook(req.body);
+      // Process the webhook and capture the result
+      const result = await processZenexaWebhook(req.body);
 
       console.log("Zenexa webhook processed successfully, sending response");
-      res.status(200).json({
+
+      // Prepare response based on webhook type
+      const responseData: any = {
         message: "Zenexa webhook processed successfully",
         webhookType: req.body.type,
         timestamp: new Date().toISOString(),
-      });
+      };
+
+      // If it's a ContactCreate event and we have result data, include it
+      if (req.body.type === "ContactCreate" && result) {
+        responseData.contact = result;
+        responseData.contactId = result.id;
+      }
+
+      // If it's a ContactDelete event and we have result data, include it
+      if (req.body.type === "ContactDelete" && result) {
+        responseData.deleteResult = result;
+        responseData.contactId = req.body.payload?.id;
+      }
+
+      res.status(200).json(responseData);
     } catch (error) {
       console.error("Zenexa webhook processing error:", error);
 
